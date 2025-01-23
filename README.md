@@ -45,8 +45,3 @@ A modern and interactive web application for visualizing cryptocurrency coins as
 - [ ] Deploy the backend to a cloud provider (e.g., AWS, Heroku).
 - [ ] Set up CI/CD pipelines for automated testing and deployment.
 
-## How to Run Locally
-
-1. Clone the repository:
-   ```bash
-   git clone https://github.com/your-username/crypto-coin-visualization.git
