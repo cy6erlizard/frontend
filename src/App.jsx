@@ -1,73 +1,92 @@
-import { useState } from "react";
+import  { useState } from "react";
+import axios from "axios";
 import SearchBar from "./components/SearchBar";
-import BubbleCanvas from "./components/BubbleCanvas";
-import CoinDetailsModal from "./components/CoinDetailsModal";
-
-// Mock bubble data
-const mockBubbles = [
-  {
-    name: "Bitcoin",
-    symbol: "BTC",
-    size: 30,
-    color: "orange",
-    position: { x: 100, y: 150 },
-  },
-  {
-    name: "Ethereum",
-    symbol: "ETH",
-    size: 25,
-    color: "blue",
-    position: { x: 300, y: 250 },
-  },
-  {
-    name: "Cardano",
-    symbol: "ADA",
-    size: 20,
-    color: "green",
-    position: { x: 500, y: 100 },
-  },
-];
+import Canvas from "./components/Canvas";
+import CoinModal from "./components/CoinModal";
+import "./index.css";
 
 const App = () => {
-  const [bubbles, setBubbles] = useState(mockBubbles); // Initialize with mock data
-  const [selectedCoin, setSelectedCoin] = useState(null);
+  const [coins, setCoins] = useState([]); // List of coins
+  const [searchResults, setSearchResults] = useState([]); // Autocomplete results
+  const [selectedCoin, setSelectedCoin] = useState(null); // Selected coin for modal
+  const [isModalOpen, setIsModalOpen] = useState(false); // Modal state
 
-  const handleSearch = (coin) => {
-    const existingBubble = bubbles.find((b) => b.name === coin.name);
-    if (existingBubble) {
-      // Increment size if bubble already exists
-      setBubbles((prev) =>
-        prev.map((b) =>
-          b.name === coin.name ? { ...b, size: b.size + 50 } : b
-        )
+  // Fetch meme coins from backend API
+  const fetchCoins = async (query = "") => {
+    try {
+      const response = await axios.get(
+        `http://localhost:5000/api/coins/search?query=${query}`
       );
-    } else {
-      // Add new bubble
-      setBubbles([
-        ...bubbles,
-        {
-          name: coin.name,
-          symbol: coin.symbol,
-          size: 90,
-          color: "blue",
-          position: { x: Math.random() * 800, y: Math.random() * 600 },
-        },
-      ]);
+      console.log("Fetched coins:", response.data); // Debugging
+      setSearchResults(response.data);
+    } catch (error) {
+      console.error("Error fetching coins:", error);
     }
   };
 
-  const handleBubbleClick = (bubble) => {
-    setSelectedCoin(bubble);
+  // Add a new coin to the canvas
+  const addCoin = (coin) => {
+    console.log("Adding coin:", coin); // Debugging
+    setCoins((prevCoins) => {
+      // Check if the coin already exists
+      const existingCoin = prevCoins.find((c) => c.id === coin.id);
+  
+      if (existingCoin) {
+        // If the coin exists, increase its size
+        return prevCoins.map((c) =>
+          c.id === coin.id ? { ...c, size: c.size + 10 } : c
+        );
+      } else {
+        // If the coin doesn't exist, add it to the canvas
+        const newCoin = {
+          id: coin.id,
+          name: coin.name,
+          symbol: coin.symbol,
+          price: coin.price,
+          marketCap: coin.marketCap,
+          size: 50, // Initial size
+          x: Math.random() * window.innerWidth, // Random position
+          y: Math.random() * window.innerHeight,
+          image: coin.image, // Use the image from the API response
+        };
+        return [...prevCoins, newCoin];
+      }
+    });
+  };
+  // Handle coin selection for modal
+  const handleBubbleClick = (coin) => {
+    console.log("Clicked coin:", coin); // Debugging
+    setSelectedCoin(coin);
+    setIsModalOpen(true);
+  };
+
+  // Handle bubble drag end
+  const handleDragEnd = (id, x, y) => {
+    console.log("Dragged coin:", id, x, y); // Debugging
+    setCoins((prevCoins) =>
+      prevCoins.map((coin) =>
+        coin.id === id ? { ...coin, x, y } : coin
+      )
+    );
   };
 
   return (
-    <div>
-      <SearchBar onSearch={handleSearch} />
-      <BubbleCanvas bubbles={bubbles} onBubbleClick={handleBubbleClick} />
+    <div className="app">
+      <SearchBar
+        searchResults={searchResults}
+        onSearch={fetchCoins}
+        onSelectCoin={addCoin}
+      />
+      <Canvas
+        coins={coins}
+        onBubbleClick={handleBubbleClick}
+        onDragEnd={handleDragEnd}
+      />
       {selectedCoin && (
-        <CoinDetailsModal
+        <CoinModal
           coin={selectedCoin}
-          onClose={() => setSelectedCoin(null)}
+          isOpen={isModalOpen}
+          onClose={() => setIsModalOpen(false)}
         />
       )}
     </div>
