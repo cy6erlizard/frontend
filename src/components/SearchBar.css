@@ -1,0 +1,149 @@
+/* General Styles */
+.search-bar {
+    position: absolute;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%);
+    z-index: 10;
+    width: 250px;
+    transition: width 0.3s ease, background 0.3s ease;
+  }
+  
+  .search-bar.expanded {
+    width: 400px; /* Expanded width when focused or has query */
+  }
+  
+  .search-input-container {
+    position: relative;
+    display: flex;
+    align-items: center;
+  }
+  
+  .search-bar input {
+    padding: 10px;
+    width: 100%;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    color: white;
+    font-size: 14px;
+    outline: none;
+    transition: background 0.3s ease;
+  }
+  
+  .search-bar input:focus {
+    background: rgba(255, 255, 255, 0.2);
+  }
+  
+  .close-button {
+    position: absolute;
+    right: 10px;
+    background: none;
+    border: none;
+    color: white;
+    cursor: pointer;
+    font-size: 16px;
+    transition: color 0.3s ease;
+  }
+  
+  .close-button:hover {
+    color: #ff4d4d;
+  }
+  
+  /* Search Results Dropdown */
+  .search-results {
+    list-style: none;
+    padding: 0;
+    margin: 10px 0 0;
+    background: rgba(255, 255, 255, 0.1);
+    backdrop-filter: blur(10px);
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+    max-height: 200px;
+    overflow-y: auto;
+    animation: fadeIn 0.3s ease;
+  }
+  
+  /* Custom Scrollbar */
+  .search-results::-webkit-scrollbar {
+    width: 8px;
+  }
+  
+  .search-results::-webkit-scrollbar-track {
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 10px;
+  }
+  
+  .search-results::-webkit-scrollbar-thumb {
+    background: rgba(255, 255, 255, 0.3);
+    border-radius: 10px;
+  }
+  
+  .search-results::-webkit-scrollbar-thumb:hover {
+    background: rgba(255, 255, 255, 0.5);
+  }
+  
+  /* Coin Item Styling */
+  .search-results li {
+    display: flex;
+    align-items: center;
+    justify-content: space-between; /* Space out items */
+    padding: 10px;
+    cursor: pointer;
+    transition: background 0.3s ease;
+  }
+  
+  .search-results li:hover,
+  .search-results li.focused {
+    background: rgba(255, 255, 255, 0.3);
+  }
+  
+  .coin-image {
+    width: 30px;
+    height: 30px;
+    margin-right: 10px;
+    border-radius: 50%;
+  }
+  
+  .coin-info {
+    display: flex;
+    align-items: center;
+    flex-grow: 1; /* Allow the name to take up remaining space */
+  }
+  
+  .coin-name {
+    font-weight: bold;
+    color: white;
+    margin-right: 10px; /* Space between name and market cap */
+  }
+  
+  .coin-symbol {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin-right: 10px; /* Space between symbol and market cap */
+  }
+  
+  .coin-market-cap {
+    color: rgba(255, 255, 255, 0.7);
+    font-size: 12px;
+    margin-left: auto; /* Push market cap to the right */
+  }
+  
+  .no-results {
+    padding: 10px;
+    color: rgba(255, 255, 255, 0.7);
+    text-align: center;
+  }
+  
+  /* Animations */
+  @keyframes fadeIn {
+    from {
+      opacity: 0;
+      transform: translateY(-10px);
+    }
+    to {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  }
