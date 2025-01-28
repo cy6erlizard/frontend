@@ -10,7 +10,7 @@ import CoinModal from "./components/CoinModal";
 import Navbar from "./components/Navbar";
 import "./index.css";
 
-// Function to push overlapping coins apart
+// (Same collision logic as before)
 function pushApartIfColliding(draggedCoinId, coinA, coinB) {
   const aCenterX = coinA.x + coinA.baseSize / 2;
   const aCenterY = coinA.y + coinA.baseSize / 2;
@@ -24,9 +24,8 @@ function pushApartIfColliding(draggedCoinId, coinA, coinB) {
   const dy = bCenterY - aCenterY;
   const dist = Math.sqrt(dx * dx + dy * dy);
   const minDist = aRadius + bRadius;
-  if (dist >= minDist || dist === 0) {
-    return false;
-  }
+  if (dist >= minDist || dist === 0) return false;
+
   const overlap = minDist - dist;
   const angle = Math.atan2(dy, dx);
 
@@ -34,7 +33,6 @@ function pushApartIfColliding(draggedCoinId, coinA, coinB) {
   const bIsDragged = coinB.id === draggedCoinId;
 
   if (aIsDragged && bIsDragged) {
-    // Rare scenario
     const shift = overlap / 2;
     coinA.x -= Math.cos(angle) * shift;
     coinA.y -= Math.sin(angle) * shift;
@@ -47,7 +45,6 @@ function pushApartIfColliding(draggedCoinId, coinA, coinB) {
     coinA.x -= Math.cos(angle) * overlap;
     coinA.y -= Math.sin(angle) * overlap;
   } else {
-    // Symmetrical push
     const shift = overlap / 2;
     coinA.x -= Math.cos(angle) * shift;
     coinA.y -= Math.sin(angle) * shift;
@@ -60,13 +57,12 @@ function pushApartIfColliding(draggedCoinId, coinA, coinB) {
 
 function resolveAllCollisions(coins, draggedCoinId) {
   const updated = [...coins];
-  const MAX_ITERS = 20;
-
-  for (let iter = 0; iter < MAX_ITERS; iter++) {
+  const MAX_ITER = 20;
+  for (let i = 0; i < MAX_ITER; i++) {
     let anyCollision = false;
-    for (let i = 0; i < updated.length; i++) {
-      for (let j = i + 1; j < updated.length; j++) {
-        const collided = pushApartIfColliding(draggedCoinId, updated[i], updated[j]);
+    for (let a = 0; a < updated.length; a++) {
+      for (let b = a + 1; b < updated.length; b++) {
+        const collided = pushApartIfColliding(draggedCoinId, updated[a], updated[b]);
         if (collided) anyCollision = true;
       }
     }
@@ -81,31 +77,31 @@ const App = () => {
   const [selectedCoin, setSelectedCoin] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
-  // Placeholder address (fetched from DB if needed, for now just hardcoded)
-  const coinAddress = "0x123456789abcdef";
+  const [coinAddress, setCoinAddress] = useState("0xPLACEHOLDER"); // from DB
 
-  // ----------------------------------------------------------------
-  // Step 1: On mount, load coin sizes from DB + re-fetch details from CoinGecko
-  // ----------------------------------------------------------------
+  // On mount, connect socket + load coin sizes + load placeholder address
   useEffect(() => {
-    // 1) Fetch the stored coin sizes
+    // 1) Load coin address placeholder from DB
+    axios.get("http://localhost:5000/api/settings/address")
+      .then((res) => {
+        setCoinAddress(res.data.coinAddress);
+      })
+      .catch((err) => console.error("Failed to load coin address:", err));
+
+    // 2) Load coin sizes from DB
     axios.get("http://localhost:5000/api/coins/sizes")
       .then(async (res) => {
-        const dbSizes = res.data; // e.g. [ { coinId, baseSize } ]
+        const dbSizes = res.data; // e.g. [ { coinId, baseSize }, ... ]
+        if (!dbSizes.length) return;
 
-        if (!dbSizes.length) return; // No coins => done
-
-        // We can fetch their details from the free /coins/markets?vs_currency=usd&ids=... endpoint
-        // If we have multiple coinIds, we can pass them all at once, e.g. "bitcoin,dogecoin"
+        // Re-fetch details from Coingecko
         const allIds = dbSizes.map((c) => c.coinId).join(",");
-        // Example call:
-        const cgResponse = await axios.get(
+        // e.g. "bitcoin,dogecoin"
+        const cgResp = await axios.get(
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${allIds}`
         );
-        // cgResponse.data => array of { id, name, symbol, image, etc. }
         // Merge baseSize from DB
-        const fetchedCoins = cgResponse.data.map((cgCoin) => {
-          // find matching baseSize from DB
+        const fetchedCoins = cgResp.data.map((cgCoin) => {
           const match = dbSizes.find((s) => s.coinId === cgCoin.id);
           return {
             id: cgCoin.id,
@@ -119,28 +115,24 @@ const App = () => {
             y: Math.random() * window.innerHeight,
           };
         });
-
-        // Now we have full coin data to display
         setCoins(fetchedCoins);
       })
       .catch((err) => {
-        console.error("Failed to load coin sizes or CG data:", err);
+        console.error("Failed to load coins/sizes:", err);
       });
 
-    // 2) Socket.io for real-time size updates
+    // 3) Connect Socket.IO
     const socket = io("http://localhost:5000");
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
     });
 
     socket.on("coinSizeUpdated", ({ coinId, newSize }) => {
+      // Update local state
       setCoins((prev) =>
-        prev.map((c) => {
-          if (c.id === coinId) {
-            return { ...c, baseSize: newSize };
-          }
-          return c;
-        })
+        prev.map((c) =>
+          c.id === coinId ? { ...c, baseSize: newSize } : c
+        )
       );
     });
 
@@ -149,69 +141,59 @@ const App = () => {
     };
   }, []);
 
-  // ----------------------------------------------------------------
-  // Searching for coins
-  // ----------------------------------------------------------------
+  // --------------------
+  // Search Logic
+  // --------------------
   const fetchTrendingCoins = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/coins/trending");
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error("Error fetching trending coins:", error);
+      const resp = await axios.get("http://localhost:5000/api/coins/trending");
+      setSearchResults(resp.data);
+    } catch (err) {
+      console.error("Error fetching trending coins:", err);
     }
   };
-
-  const fetchCoins = async (query = "") => {
+  const fetchCoins = async (query) => {
     try {
-      const response = await axios.get(
+      const resp = await axios.get(
         `http://localhost:5000/api/coins/search?query=${query}`
       );
-      setSearchResults(response.data);
-    } catch (error) {
-      console.error("Error fetching coins:", error);
+      setSearchResults(resp.data);
+    } catch (err) {
+      console.error("Error fetching coins:", err);
     }
   };
-
   const handleSearchBarFocus = () => {
-    if (!isSearching) {
-      fetchTrendingCoins();
-    }
+    if (!isSearching) fetchTrendingCoins();
   };
-
   const handleSearchInputChange = (query) => {
     setIsSearching(query.length > 0);
-    if (query.length > 0) {
-      fetchCoins(query);
-    } else {
-      fetchTrendingCoins();
-    }
+    if (query.length > 0) fetchCoins(query);
+    else fetchTrendingCoins();
   };
 
-  // ----------------------------------------------------------------
+  // --------------------
   // Add or Grow Coin
-  // ----------------------------------------------------------------
+  // --------------------
   const addCoin = (coin) => {
-    setCoins((prevCoins) => {
-      const existing = prevCoins.find((c) => c.id === coin.id);
-      let updated = [...prevCoins];
-
+    setCoins((prev) => {
+      const existing = prev.find((c) => c.id === coin.id);
+      let updated = [...prev];
       if (existing) {
-        // If the coin is already in local state => ask server to increment baseSize
+        // Ask server to increment baseSize
         axios
           .put("http://localhost:5000/api/coins/size", {
             coinId: coin.id,
-            incrementSize: 500,
+            incrementSize: 10,
           })
           .then((res) => {
             console.log("Server updated coin size:", res.data);
-            // The server will emit coinSizeUpdated -> local state updates automatically
           })
           .catch((err) => {
             console.error(err?.response?.data || err.message);
             alert(err?.response?.data?.error || "Failed to update size");
           });
       } else {
-        // Not in local state => create new bubble
+        // If new coin => create local bubble
         const newBubble = {
           id: coin.id,
           name: coin.name,
@@ -225,7 +207,7 @@ const App = () => {
         };
         updated.push(newBubble);
 
-        // Also tell server to create if not found (incrementSize=0)
+        // Also ensure DB doc is created
         axios
           .put("http://localhost:5000/api/coins/size", {
             coinId: coin.id,
@@ -235,39 +217,33 @@ const App = () => {
             console.log("Created coin in DB:", res.data);
           })
           .catch((err) => {
-            console.error("Error creating coin in DB:", err?.response?.data || err.message);
+            console.error(err?.response?.data || err.message);
           });
       }
-
-      // Locally resolve collisions (no "dragged" coin here)
       updated = resolveAllCollisions(updated, null);
       return updated;
     });
   };
 
-  // ----------------------------------------------------------------
-  // Bubble Click & Drag
-  // ----------------------------------------------------------------
+  // --------------------
+  // Bubbles
+  // --------------------
   const handleBubbleClick = (coin) => {
     setSelectedCoin(coin);
     setIsModalOpen(true);
   };
-
   const handleDragEnd = (id, x, y) => {
     setCoins((prev) => {
       let updated = prev.map((c) => (c.id === id ? { ...c, x, y } : c));
-      // Freeze the dragged coin => push others
       updated = resolveAllCollisions(updated, id);
       return updated;
     });
   };
 
-  // ----------------------------------------------------------------
-  // Render
-  // ----------------------------------------------------------------
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="app">
+        {/* Pass coinAddress to Navbar */}
         <Navbar coinAddress={coinAddress} />
         <div className="app-content">
           <div className="canvas">
