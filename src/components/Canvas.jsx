@@ -62,7 +62,7 @@ const Canvas = ({ coins, onBubbleClick, onDragEnd }) => {
   const scaleFactor = computeScaleFactor(width, height, coins);
 
   return (
-    <div className="canvas">
+    <div>
       {coins.map((coin) => {
         // We'll scale the coin's diameter for display
         const scaledSize = coin.baseSize * scaleFactor;

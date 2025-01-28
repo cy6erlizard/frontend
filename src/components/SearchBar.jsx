@@ -92,7 +92,8 @@ const SearchBar = ({ searchResults, onSearch, onSelectCoin, onFocus }) => {
   }, [focusedIndex]);
 
   return (
-    <div className={`search-bar ${isFocused || query ? "expanded" : ""}`}>
+  <div className="search-bar-container">
+      <div className={`search-bar ${isFocused || query ? "expanded" : ""}`}>
       <div className="search-input-container">
         <input
           type="text"
@@ -138,6 +139,7 @@ const SearchBar = ({ searchResults, onSearch, onSelectCoin, onFocus }) => {
         </ul>
       )}
     </div>
+  </div>
   );
 };
 

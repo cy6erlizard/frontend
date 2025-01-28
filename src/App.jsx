@@ -6,6 +6,7 @@ import SearchBar from "./components/SearchBar";
 import Canvas from "./components/Canvas";
 import CoinModal from "./components/CoinModal";
 import "./index.css";
+import Navbar from "./components/Navbar";
 
 /**
  * pushApartIfColliding(draggedCoinId, coinA, coinB):
@@ -114,10 +115,13 @@ const App = () => {
   const [selectedCoin, setSelectedCoin] = useState(null);
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
+  const coinAddress = "0x123456789abcdef"; // Replace with actual coin address
 
   const fetchTrendingCoins = async () => {
     try {
-      const response = await axios.get("http://localhost:5000/api/coins/trending");
+      const response = await axios.get(
+        "http://localhost:5000/api/coins/trending"
+      );
       setSearchResults(response.data);
     } catch (error) {
       console.error("Error fetching trending coins:", error);
@@ -204,24 +208,29 @@ const App = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="app">
-        <SearchBar
-          searchResults={searchResults}
-          onSearch={handleSearchInputChange}
-          onFocus={handleSearchBarFocus}
-          onSelectCoin={addCoin}
-        />
-        <Canvas
-          coins={coins}
-          onBubbleClick={handleBubbleClick}
-          onDragEnd={handleDragEnd}
-        />
-        {selectedCoin && (
-          <CoinModal
-            coin={selectedCoin}
-            isOpen={isModalOpen}
-            onClose={() => setIsModalOpen(false)}
-          />
-        )}
+        <Navbar coinAddress={coinAddress} />
+        <div className="app-content">
+          <div className="canvas">
+            <SearchBar
+              searchResults={searchResults}
+              onSearch={handleSearchInputChange}
+              onFocus={handleSearchBarFocus}
+              onSelectCoin={addCoin}
+            />
+            <Canvas
+              coins={coins}
+              onBubbleClick={handleBubbleClick}
+              onDragEnd={handleDragEnd}
+            />
+          </div>
+          {selectedCoin && (
+            <CoinModal
+              coin={selectedCoin}
+              isOpen={isModalOpen}
+              onClose={() => setIsModalOpen(false)}
+            />
+          )}
+        </div>
       </div>
     </DndProvider>
   );

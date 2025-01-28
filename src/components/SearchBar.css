@@ -1,9 +1,13 @@
 /* General Styles */
+.search-bar-container {
+  align-items: center;
+  justify-content: center;
+  display: flex;
+  width: 100%;
+}
 .search-bar {
-    position: absolute;
-    top: 20px;
-    left: 50%;
-    transform: translateX(-50%);
+    position: relative;
+    padding-top: 15px;
     z-index: 10;
     width: 250px;
     transition: width 0.3s ease, background 0.3s ease;
