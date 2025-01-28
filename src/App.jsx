@@ -3,6 +3,7 @@ import axios from "axios";
 import { io } from "socket.io-client";
 import { DndProvider } from "react-dnd";
 import { HTML5Backend } from "react-dnd-html5-backend";
+import TutorialModal from "./components/TutorialModal"; // <-- Import the new component
 
 import SearchBar from "./components/SearchBar";
 import Canvas from "./components/Canvas";
@@ -78,29 +79,30 @@ const App = () => {
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isSearching, setIsSearching] = useState(false);
   const [coinAddress, setCoinAddress] = useState("0xPLACEHOLDER"); // from DB
+  const [isTutorialOpen, setIsTutorialOpen] = useState(false);
 
-  // On mount, connect socket + load coin sizes + load placeholder address
   useEffect(() => {
-    // 1) Load coin address placeholder from DB
+    const hasSeenTutorial = localStorage.getItem("hasSeenTutorial");
+    if (!hasSeenTutorial) {
+      setIsTutorialOpen(true);
+    }
+
+
     axios.get("http://localhost:5000/api/settings/address")
       .then((res) => {
         setCoinAddress(res.data.coinAddress);
       })
       .catch((err) => console.error("Failed to load coin address:", err));
 
-    // 2) Load coin sizes from DB
     axios.get("http://localhost:5000/api/coins/sizes")
       .then(async (res) => {
-        const dbSizes = res.data; // e.g. [ { coinId, baseSize }, ... ]
+        const dbSizes = res.data;
         if (!dbSizes.length) return;
 
-        // Re-fetch details from Coingecko
         const allIds = dbSizes.map((c) => c.coinId).join(",");
-        // e.g. "bitcoin,dogecoin"
         const cgResp = await axios.get(
           `https://api.coingecko.com/api/v3/coins/markets?vs_currency=usd&ids=${allIds}`
         );
-        // Merge baseSize from DB
         const fetchedCoins = cgResp.data.map((cgCoin) => {
           const match = dbSizes.find((s) => s.coinId === cgCoin.id);
           return {
@@ -121,14 +123,12 @@ const App = () => {
         console.error("Failed to load coins/sizes:", err);
       });
 
-    // 3) Connect Socket.IO
     const socket = io("http://localhost:5000");
     socket.on("connect", () => {
       console.log("Socket connected:", socket.id);
     });
 
     socket.on("coinSizeUpdated", ({ coinId, newSize }) => {
-      // Update local state
       setCoins((prev) =>
         prev.map((c) =>
           c.id === coinId ? { ...c, baseSize: newSize } : c
@@ -141,9 +141,11 @@ const App = () => {
     };
   }, []);
 
-  // --------------------
-  // Search Logic
-  // --------------------
+  const closeTutorial = () => {
+    setIsTutorialOpen(false);
+    localStorage.setItem("hasSeenTutorial", "true"); // Mark as seen
+  };
+
   const fetchTrendingCoins = async () => {
     try {
       const resp = await axios.get("http://localhost:5000/api/coins/trending");
@@ -152,6 +154,7 @@ const App = () => {
       console.error("Error fetching trending coins:", err);
     }
   };
+
   const fetchCoins = async (query) => {
     try {
       const resp = await axios.get(
@@ -162,24 +165,22 @@ const App = () => {
       console.error("Error fetching coins:", err);
     }
   };
+
   const handleSearchBarFocus = () => {
     if (!isSearching) fetchTrendingCoins();
   };
+
   const handleSearchInputChange = (query) => {
     setIsSearching(query.length > 0);
     if (query.length > 0) fetchCoins(query);
     else fetchTrendingCoins();
   };
 
-  // --------------------
-  // Add or Grow Coin
-  // --------------------
   const addCoin = (coin) => {
     setCoins((prev) => {
       const existing = prev.find((c) => c.id === coin.id);
       let updated = [...prev];
       if (existing) {
-        // Ask server to increment baseSize
         axios
           .put("http://localhost:5000/api/coins/size", {
             coinId: coin.id,
@@ -193,7 +194,6 @@ const App = () => {
             alert(err?.response?.data?.error || "Failed to update size");
           });
       } else {
-        // If new coin => create local bubble
         const newBubble = {
           id: coin.id,
           name: coin.name,
@@ -207,7 +207,6 @@ const App = () => {
         };
         updated.push(newBubble);
 
-        // Also ensure DB doc is created
         axios
           .put("http://localhost:5000/api/coins/size", {
             coinId: coin.id,
@@ -225,13 +224,11 @@ const App = () => {
     });
   };
 
-  // --------------------
-  // Bubbles
-  // --------------------
   const handleBubbleClick = (coin) => {
     setSelectedCoin(coin);
     setIsModalOpen(true);
   };
+
   const handleDragEnd = (id, x, y) => {
     setCoins((prev) => {
       let updated = prev.map((c) => (c.id === id ? { ...c, x, y } : c));
@@ -243,7 +240,6 @@ const App = () => {
   return (
     <DndProvider backend={HTML5Backend}>
       <div className="app">
-        {/* Pass coinAddress to Navbar */}
         <Navbar coinAddress={coinAddress} />
         <div className="app-content">
           <div className="canvas">
@@ -266,6 +262,8 @@ const App = () => {
               onClose={() => setIsModalOpen(false)}
             />
           )}
+          <TutorialModal isOpen={isTutorialOpen} onClose={closeTutorial} />
+
         </div>
       </div>
     </DndProvider>

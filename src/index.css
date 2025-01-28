@@ -183,7 +183,7 @@ body {
   align-items: center;
   padding: 1px 15px;
   background: rgba(107, 17, 203, 0.493);
-  background: linear-gradient(140deg, #353838, #5c5e5d);
+  background: linear-gradient(140deg, #5c5e5d,#353838 );
 
   color: #fff;
   backdrop-filter: blur(20px); /* Glass effect */
@@ -210,7 +210,9 @@ body {
   display: flex;
   align-items: center;
 }
-
+.social-button{
+  margin: 10px;
+}
 .navbar-logo svg {
   margin-right: 10px;
   width: 30px;
@@ -258,10 +260,10 @@ body {
   display: flex;
   align-items: center;
   gap: 10px;
-  background: rgba(255, 255, 255, 0.014);
+  background: rgba(32, 26, 26, 0.425);
   padding: 5px 10px;
-  border-radius: 10px;
-  font-size: 0.9rem;
+  border-radius: 17px;
+  font-size: 1.2rem;
   font-family: monospace;
   color: #fff;
 }
@@ -282,7 +284,7 @@ body {
   background: rgba(255, 255, 255, 0.3);
   color: #000;
   font-size: 0.8rem;
-  border-radius: 5px;
+  border-radius: 25px;
   cursor: pointer;
   transition: background 0.3s ease, transform 0.3s ease;
 }
