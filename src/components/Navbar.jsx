@@ -2,7 +2,7 @@ import PropTypes from "prop-types";
 import { useState } from "react";
 import AboutModal from "./AboutModal";
 
-import logo from "../assets/SHILL1-logo.png"
+import logo from "../assets/shill.png"
 import X from "../assets/X_logo.svg"
 import pump from "../assets/pump_logo.png"
 
@@ -28,7 +28,7 @@ const Navbar = ({ coinAddress }) => {
           <img
             src={logo}  
             alt="Site Logo"
-            style={{ width: 126, height: 71 }}
+            style={{ maxWidth: "14%", height: "auto" }}
           />
           
         </div>

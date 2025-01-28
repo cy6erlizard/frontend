@@ -163,7 +163,7 @@ const App = () => {
       if (existingCoin) {
         // If coin is already on canvas, just increase its baseSize
         updated = updated.map((c) =>
-          c.id === coin.id ? { ...c, baseSize: c.baseSize + 500 } : c
+          c.id === coin.id ? { ...c, baseSize: c.baseSize + 10 } : c
         );
       } else {
         // Otherwise create a new coin with some initial baseSize
