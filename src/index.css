@@ -1,6 +1,6 @@
 body {
   margin: 0;
-  font-family: Arial, sans-serif;
+  font-family: "Alata", serif;
   overflow: hidden; /* Prevent scrolling */
 }
 
@@ -230,7 +230,7 @@ body {
   display: flex;
   
   align-items: center;
-  gap: 10px;
+  gap: 1px;
 }
 
 .social-button {
@@ -263,8 +263,7 @@ body {
   background: rgba(32, 26, 26, 0.425);
   padding: 5px 10px;
   border-radius: 17px;
-  font-size: 1.2rem;
-  font-family: monospace;
+  font-size: 0.9rem;
   color: #fff;
 }
 

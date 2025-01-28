@@ -5,7 +5,9 @@ import { useState } from "react";
 import logo from "../assets/shill.png";
 import xLogo from "../assets/x_logo.svg";
 import pumpLogo from "../assets/pump_logo.png";
-import gitbookLogo from "../assets/GitBook.png"; // Add your GitBook logo asset
+import gitbookLogo from "../assets/GitBook.png"; // GitBook logo asset
+import dexLogo from "../assets/dex.png"; // Add your DexScreener logo asset
+import githubLogo from "../assets/github.png"; // Add your GitHub logo asset
 
 const Navbar = ({ coinAddress }) => {
   const [copied, setCopied] = useState(false);
@@ -19,20 +21,30 @@ const Navbar = ({ coinAddress }) => {
   return (
     <nav className="navbar-modern">
       <div className="navbar-left">
-        <div className="navbar-logo-container" style={{ display: "flex", alignItems: "center", gap: "10px" }}>
+        <div
+          className="navbar-logo-container"
+          style={{ display: "flex", alignItems: "center", gap: "10px" }}
+        >
           <div className="navbar-logo" style={{ cursor: "pointer" }}>
-            <img src={logo} alt="Site Logo" style={{ maxWidth: "15%", height: "auto" }} />
-          <a
-            href="https://your-gitbook-link.com" // Replace with your GitBook link
-            target="_blank"
-            rel="noopener noreferrer"
-            className="social-button"
-            title="GitBook Documentation"
-          >
-            <img src={gitbookLogo} alt="GitBook" style={{ width: "24px", height: "24px" }} />
-          </a>
+            <img
+              src={logo}
+              alt="Site Logo"
+              style={{ maxWidth: "15%", height: "auto" }}
+            />
+            <a
+              href="https://shill-ai.gitbook.io/shill.ai" 
+              target="_blank"
+              rel="noopener noreferrer"
+              className="social-button"
+              title="GitBook Documentation"
+            >
+              <img
+                src={gitbookLogo}
+                alt="GitBook"
+                style={{ width: "24px", height: "24px" }}
+              />
+            </a>
           </div>
-          {/* GitBook Icon Button */}
         </div>
 
         {/* Display the coinAddress placeholder */}
@@ -50,11 +62,56 @@ const Navbar = ({ coinAddress }) => {
       </div>
 
       <div className="navbar-right">
-        <a href="https://x.com" target="_blank" rel="noopener noreferrer" className="social-button">
+        {/* X button */}
+        <a
+          href="https://x.com/SHILLAIsolana"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="social-button"
+        >
           <img src={xLogo} alt="X" className="social-logo" />
         </a>
-        <a href="https://pump.fun" target="_blank" rel="noopener noreferrer" className="social-button">
+
+        {/* Pump.fun button */}
+        <a
+          href="https://pump.fun/coin/${coinAddress}"
+          target="_blank"
+          rel="noopener noreferrer"
+          className="social-button"
+        >
           <img src={pumpLogo} alt="Pump.fun" className="social-logo" />
+        </a>
+
+        {/* DexScreener button */}
+        <a
+          href={`https://dexscreener.com/solana/${coinAddress}`} // Link to DexScreener for the current coin address
+          target="_blank"
+          rel="noopener noreferrer"
+          className="social-button"
+          title="View on DexScreener"
+        >
+          <img
+            src={dexLogo}
+            alt="DexScreener"
+            className="social-logo"
+            style={{ width: "24px", height: "24px" }}
+          />
+        </a>
+
+        {/* GitHub button */}
+        <a
+          href="https://github.com/shillai0/-SHILL" // Replace with your GitHub repository link
+          target="_blank"
+          rel="noopener noreferrer"
+          className="social-button"
+          title="GitHub Repository"
+        >
+          <img
+            src={githubLogo}
+            alt="GitHub"
+            className="social-logo"
+            style={{ width: "24px", height: "24px" }}
+          />
         </a>
       </div>
     </nav>
